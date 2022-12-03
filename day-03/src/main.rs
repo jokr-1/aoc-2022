@@ -1,33 +1,45 @@
 use std::fs;
 
 fn main() {
-    let input = fs::read_to_string("testinput").unwrap();
-    println!("Part 1: {}", part_one(input.trim()));
-    println!("Part 2: {}", part_two(input.trim()));
+    let input = fs::read_to_string("input").unwrap();
+    let trimmed = input.trim();
+    println!("Part 1: {:?}", part_one(trimmed));
+    println!("Part 2: {:?}", part_two(trimmed));
 }
 
-fn part_one(input: &str) -> String {
+fn get_value(item: char) -> u32 {
+    if item.is_lowercase() {
+        item as u32 - 96
+    } else {
+        item as u32 - 38
+    }
+}
+
+fn part_one(input: &str) -> u32 {
     input
-        .trim()
         .lines()
         .map(|rucksack| {
             let (a, b) = rucksack.split_at(rucksack.len() / 2);
             a.chars()
                 .filter(|item| b.contains(*item))
-                .map(|item| {
-                    if item.is_lowercase() {
-                        item as u32 - 96
-                    } else {
-                        item as u32 - 38
-                    }
-                })
-                .next()
+                .map(get_value)
+                .next() // only intersted in first result
                 .unwrap()
         })
-        .sum::<u32>()
-        .to_string()
+        .sum()
 }
 
-fn part_two(input: &str) -> String {
-    "".to_string()
+fn part_two(input: &str) -> u32 {
+    let rucksacks: Vec<&str> = input.lines().collect();
+    rucksacks
+        .chunks(3)
+        .map(|badges| {
+            badges[0]
+                .chars()
+                .filter(|item| badges[1].contains(*item) && badges[2].contains(*item))
+                .map(get_value)
+                .next() // only intersted in first result
+                .unwrap()
+        })
+        .sum()
 }

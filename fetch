@@ -9,13 +9,14 @@ DAY_PATH=$(printf "%02d" $DAY)
 PROJECT=day-$DAY_PATH
 echo $PROJECT
 
-if [ -d "./$PROJECT" ]; then
-  echo "Project '$PROJECT' already exists, exiting..."
-  exit 0;
+if ! [ -d "./$PROJECT" ]
+then
+  echo "Initializing new rust project"
+  cargo init $PROJECT --vcs none
+  cp template/* $PROJECT/src/
+else
+  echo "Project '$PROJECT' already exists, lets only fetch or re-fetch input..."
 fi
 
-cargo init $PROJECT
-cp template/* $PROJECT/src/
 curl $URL -b $(cat aoc_cookie) -o $PROJECT/input
 echo "done."
-cd $PROJECT
