@@ -30,8 +30,9 @@ fn part_one(input: &str) -> u32 {
 }
 
 fn part_two(input: &str) -> u32 {
-    let rucksacks: Vec<&str> = input.lines().collect();
-    rucksacks
+    input
+        .lines()
+        .collect::<Vec<&str>>()
         .chunks(3)
         .map(|badges| {
             badges[0]
