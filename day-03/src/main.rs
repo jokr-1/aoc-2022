@@ -9,9 +9,9 @@ fn main() {
 
 fn get_value(item: char) -> u32 {
     let item = item as u32;
-    item - match item {
-        41..=90 => 38,
-        _ => 96,
+    match item {
+        41..=90 => item - 38,
+        _ => item - 96,
     }
 }
 
