@@ -1,7 +1,7 @@
 use std::fs;
 
 fn main() {
-    let input = fs::read_to_string("input").unwrap();
+    let input = include_str!("../input").trim();
     println!("Part 1: {:?}", part_one(input.trim()));
     println!("Part 2: {:?}", part_two(input.trim()));
 }
