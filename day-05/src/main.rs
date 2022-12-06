@@ -10,16 +10,16 @@ fn main() {
             .skip(1)
             .step_by(2)
             .map(|v| v.parse().unwrap())
-            .collect(); // count, from, to
+            .collect(); // amount, from, to
         (vals[0], vals[1] - 1, vals[2] - 1)
     });
 
     let mut stack_a = Stack::from_str(stack_def);
     let mut stack_b = Stack::from_str(stack_def);
 
-    for (count, from, to) in cmds {
-        stack_a.move_item(from, to, count);
-        stack_b.shift_item(from, to, count);
+    for (amount, from, to) in cmds {
+        (0..amount).for_each(|_| stack_a.move_items(1, from, to));
+        stack_b.move_items(amount, from, to);
     }
 
     println!("Part 1: {}", stack_a.top());
@@ -44,16 +44,9 @@ impl Stack {
         Self { data }
     }
 
-    fn move_item(&mut self, from: usize, to: usize, count: usize) {
-        for _ in 0..count {
-            let node = self.data[from].pop_back().unwrap();
-            self.data[to].push_back(node);
-        }
-    }
-
-    fn shift_item(&mut self, from: usize, to: usize, count: usize) {
-        let split_index = self.data[from].len() - count;
-        let mut split = self.data[from].split_off(split_index);
+    fn move_items(&mut self, amount: usize, from: usize, to: usize) {
+        let split_at = self.data[from].len() - amount;
+        let mut split = self.data[from].split_off(split_at);
         self.data[to].append(&mut split);
     }
 
