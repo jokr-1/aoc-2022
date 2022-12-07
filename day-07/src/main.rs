@@ -15,11 +15,11 @@ fn parse_filesystem(input: &str) -> Filesystem {
     let mut directories = HashMap::new();
 
     input
-        .split('$')
+        .split("$ ")
         .skip(1)
         .map(|part| {
-            let (expr, body) = part.trim().split_at(2);
-            (expr.trim(), body.trim())
+            let (expr, body) = part.split_at(2);
+            (expr, body.trim())
         })
         .for_each(|cmd| {
             match cmd {
