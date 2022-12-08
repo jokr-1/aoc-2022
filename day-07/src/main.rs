@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn parse_filesystem(input: &str) -> Filesystem {
-    let mut current_directory = Vec::new();
+    let mut path = vec!["/".to_string()];
     let mut directories = HashMap::new();
 
     input
@@ -23,23 +23,21 @@ fn parse_filesystem(input: &str) -> Filesystem {
         })
         .for_each(|cmd| {
             match cmd {
-                ("cd", root @ "/") => {
-                    current_directory.clear();
-                    current_directory.push(root.to_string());
+                ("cd", "/") => {
+                    path.truncate(1);
                 }
                 ("cd", "..") => {
-                    current_directory.pop();
+                    path.pop();
                 }
                 ("cd", dirname) => {
-                    let last_dir = current_directory.last().unwrap();
-                    current_directory.push(format!("{last_dir}{dirname}/"));
+                    path.push(format!("{}{dirname}/", path.last().unwrap()));
                 }
                 ("ls", body) => {
                     body.lines()
                         .map(|l| l.split_whitespace().next().unwrap())
                         .filter_map(|filesize| filesize.parse::<usize>().ok())
                         .for_each(|filesize| {
-                            current_directory.iter().cloned().for_each(|dir| {
+                            path.iter().cloned().for_each(|dir| {
                                 directories
                                     .entry(dir)
                                     .and_modify(|size| *size += filesize)
@@ -67,6 +65,7 @@ fn part_two(filesystem: &Filesystem) -> usize {
 
     *filesystem
         .values()
-        .min_by_key(|f| f.abs_diff(needed))
+        .filter(|&&value| value >= needed)
+        .min()
         .unwrap()
 }
