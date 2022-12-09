@@ -1,4 +1,5 @@
 aoc_cookie
+.vscode
 target
 input.txt
 testinput.txt
