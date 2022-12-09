@@ -18,5 +18,6 @@ else
   echo "Project '$PROJECT' already exists, lets only fetch or re-fetch input..."
 fi
 
-curl $URL -b $(cat aoc_cookie) -o $PROJECT/input
+curl $URL -b $(cat aoc_cookie) -o $PROJECT/input.txt
+touch $PROJECT/testinput.txt
 echo "done."
