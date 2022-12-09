@@ -34,13 +34,11 @@ struct Command {
     amount: usize,
 }
 
-#[derive(Clone, Debug)]
 struct Rope {
     knots: Vec<Position>,
     tail_positions: HashSet<Position>,
 }
 
-#[derive(Clone, Copy)]
 enum Direction {
     Left,
     Right,
@@ -58,12 +56,12 @@ impl Rope {
 
     fn execute(&mut self, cmd: &Command) {
         for _ in 0..cmd.amount {
-            self.move_head(cmd.direction);
+            self.move_head(&cmd.direction);
             self.update_tail();
         }
     }
 
-    fn move_head(&mut self, direction: Direction) {
+    fn move_head(&mut self, direction: &Direction) {
         match direction {
             Direction::Up => self.knots[0].1 += 1 as i32,
             Direction::Down => self.knots[0].1 -= 1 as i32,
