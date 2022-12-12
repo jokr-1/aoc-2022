@@ -2,7 +2,7 @@
 enum Operation {
     Add(u64),
     Multiply(u64),
-    Sqaure,
+    Square,
 }
 
 #[derive(Clone)]
@@ -27,7 +27,7 @@ fn parse_monkey(monkey: &str) -> Monkey {
     let parts: Vec<&str> = lines.next().unwrap().split_whitespace().collect();
 
     let operation = match parts[..] {
-        [.., "*", "old"] => Operation::Sqaure,
+        [.., "*", "old"] => Operation::Square,
         [.., "+", v] => Operation::Add(v.parse().unwrap()),
         [.., "*", v] => Operation::Multiply(v.parse().unwrap()),
         _ => panic!("Unknown operation"),
@@ -69,7 +69,7 @@ fn get_monkey_business(mut monkeys: Vec<Monkey>, divider: u64, rounds: usize) ->
                 let mut new_value = match monkeys[monkey_id].operation {
                     Operation::Add(value) => worry_level + value,
                     Operation::Multiply(value) => worry_level * value,
-                    Operation::Sqaure => worry_level * worry_level,
+                    Operation::Square => worry_level * worry_level,
                 };
 
                 new_value /= divider;

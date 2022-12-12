@@ -71,17 +71,17 @@ impl Rope {
     }
 
     fn update_tail(&mut self) {
-        let mut last = self.knots[0];
+        let mut last_knot = self.knots[0];
 
         for knot in self.knots.iter_mut().skip(1) {
-            let (dx, dy) = (last.0 - knot.0, last.1 - knot.1);
+            let (dx, dy) = (last_knot.0 - knot.0, last_knot.1 - knot.1);
 
             if dx.abs() > 1 || dy.abs() > 1 {
                 knot.0 += dx.signum();
                 knot.1 += dy.signum();
             }
 
-            last = *knot;
+            last_knot = *knot;
         }
 
         self.tail_positions.insert(*self.knots.last().unwrap());
