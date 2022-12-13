@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 type Position = (usize, usize);
 
-fn bts<F, G>(graph: &HashMap<Position, u8>, start: Position, goal: F, reachable: G) -> Option<usize>
+fn bfs<F, G>(graph: &HashMap<Position, u8>, start: Position, goal: F, reachable: G) -> Option<usize>
 where
     F: Fn(&Position) -> bool,
     G: Fn(&Position, &Position) -> bool,
@@ -65,7 +65,7 @@ fn main() {
         .collect();
 
     // PART 1
-    let solution = bts(
+    let solution = bfs(
         &graph,
         start,
         |node| node == &end,                         // goal
@@ -75,7 +75,7 @@ fn main() {
     println!("Part 1: {solution}");
 
     // PART 2
-    let solution = bts(
+    let solution = bfs(
         &graph,
         end,
         |node| graph[node] == 'a' as u8,             // goal
