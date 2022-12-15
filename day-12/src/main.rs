@@ -2,7 +2,12 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 type Position = (usize, usize);
 
-fn bfs<F, G>(graph: &HashMap<Position, u8>, start: Position, goal: F, reachable: G) -> Option<usize>
+fn bfs<F, G>(
+    adjacents: &HashMap<Position, Vec<Position>>,
+    start: Position,
+    goal: F,
+    reachable: G,
+) -> Option<usize>
 where
     F: Fn(&Position) -> bool,
     G: Fn(&Position, &Position) -> bool,
@@ -17,22 +22,13 @@ where
             return Some(cost);
         }
 
-        for (di, dj) in [(1, 0), (-1, 0), (0, 1), (0, -1)] {
-            let next = (
-                (node.0 as isize + di) as usize,
-                (node.1 as isize + dj) as usize,
-            );
-
-            if !graph.contains_key(&next) || visited.contains(&next) {
+        for next in &adjacents[&node] {
+            if visited.contains(&next) {
                 continue;
             }
 
-            if !reachable(&node, &next) {
-                continue;
-            }
-
-            queue.push_back((next, cost + 1));
-            visited.insert(next);
+            queue.push_back((*next, cost + 1));
+            visited.insert(*next);
         }
     }
     None
@@ -64,23 +60,77 @@ fn main() {
         })
         .collect();
 
-    // PART 1
-    let solution = bfs(
-        &graph,
-        start,
-        |node| node == &end,                         // goal
-        |node, next| graph[next] <= graph[node] + 1, // reachable adjacents
-    )
-    .unwrap();
-    println!("Part 1: {solution}");
+    let adjacents: HashMap<Position, Vec<Position>> = graph
+        .iter()
+        .map(|(&pos, &node_val)| {
+            let n = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+                .iter()
+                .filter_map(|(di, dj)| {
+                    let next = (
+                        (pos.0 as isize + di) as usize,
+                        (pos.1 as isize + dj) as usize,
+                    );
+                    if let Some(val) = graph.get(&next) {
+                        if *val <= node_val + 1 {
+                            Some(next)
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<Position>>();
+            (pos, n)
+        })
+        .collect();
 
-    // PART 2
-    let solution = bfs(
-        &graph,
-        end,
-        |node| graph[node] == 'a' as u8,             // goal
-        |node, next| graph[node] - 1 <= graph[next], // reachable adjacents
-    )
-    .unwrap();
-    println!("Part 2: {solution}");
+    let adjacents2: HashMap<Position, Vec<Position>> = graph
+        .iter()
+        .map(|(&pos, &node_val)| {
+            let n = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+                .iter()
+                .filter_map(|(di, dj)| {
+                    let next = (
+                        (pos.0 as isize + di) as usize,
+                        (pos.1 as isize + dj) as usize,
+                    );
+                    if let Some(val) = graph.get(&next) {
+                        if node_val <= *val + 1 {
+                            Some(next)
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<Position>>();
+            (pos, n)
+        })
+        .collect();
+
+    // dbg!(&adjacents[&(0, 0)]);
+
+    for _ in 0..1000 {
+        // PART 1
+        let solution = bfs(
+            &adjacents,
+            start,
+            |node| node == &end,                         // goal
+            |node, next| graph[next] <= graph[node] + 1, // reachable adjacents
+        )
+        .unwrap();
+        // println!("Part 1: {solution}");
+
+        // PART 2
+        let solution = bfs(
+            &adjacents2,
+            end,
+            |node| graph[node] == 'a' as u8,             // goal
+            |node, next| graph[node] - 1 <= graph[next], // reachable adjacents
+        )
+        .unwrap();
+        // println!("Part 2: {solution}");
+    }
 }
