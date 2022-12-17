@@ -130,6 +130,35 @@ fn pathfinder(graph: &HashMap<String, Vec<(String, u32, u32)>>) -> u32 {
     *res.iter().max().unwrap()
 }
 
+fn pathfinder2(graph: &HashMap<String, Vec<(String, u32, u32)>>) -> u32 {
+    let mut queue = Vec::new();
+    let mut res = vec![];
+    let start = "AA".to_owned();
+    queue.push((26, 0, vec![&start], true));
+
+    while let Some((time, pressure, path, elephants_round)) = queue.pop() {
+        let current = path.last().unwrap();
+
+        for (next, distance, rate) in &graph[*current] {
+            if path.contains(&next) || *distance as isize > time as isize - 1 {
+                continue;
+            }
+
+            let mut p = path.clone();
+            let next_time = if !elephants_round {
+                time - distance - 1
+            } else {
+                time
+            };
+            p.push(&next);
+            queue.push((next_time, pressure + rate * time, p, !elephants_round))
+        }
+
+        res.push(pressure);
+    }
+    *res.iter().max().unwrap()
+}
+
 fn part_two(input: &str) -> i32 {
     0
 }
