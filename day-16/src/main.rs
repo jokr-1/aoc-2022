@@ -99,29 +99,43 @@ fn part_one(input: &str) -> u32 {
         })
         .collect();
 
-    pathfinder(&graph)
+    // pathfinder2(&graph)
+    let res = pathfinder3(&graph);
+
+    let mut best = 0;
+    for (a, p1) in &res {
+        for (b, p2) in &res {
+            if (a & b) == 0 {
+                best = best.max(p1 + p2)
+            }
+        }
+    }
+    dbg!(best);
+    0
 }
 
 fn pathfinder(graph: &HashMap<String, Vec<(String, u32, u32)>>) -> u32 {
     let mut queue = Vec::new();
     let mut res = vec![];
     let start = "AA".to_owned();
-    queue.push((30, 0, vec![&start]));
+    let ids: HashMap<String, u8> = graph
+        .keys()
+        .enumerate()
+        .map(|(k, v)| (v.to_owned(), k as u8))
+        .collect();
+    queue.push((30, 0, start, 0u64));
 
-    while let Some((time, pressure, path)) = queue.pop() {
-        let current = path.last().unwrap();
-
-        for (next, distance, rate) in &graph[*current] {
-            if path.contains(&next) || *distance as isize > time as isize - 1 {
+    while let Some((time, pressure, current, path)) = queue.pop() {
+        for (next, distance, rate) in &graph[&current] {
+            if !(path & (1 << ids[next]) == 0) || *distance as isize > time as isize - 1 {
                 continue;
             }
 
-            let mut p = path.clone();
-            p.push(&next);
             queue.push((
                 time - distance - 1,
                 pressure + rate * (time - distance - 1),
-                p,
+                next.clone(),
+                path | (1 << ids[next]),
             ))
         }
 
@@ -130,28 +144,97 @@ fn pathfinder(graph: &HashMap<String, Vec<(String, u32, u32)>>) -> u32 {
     *res.iter().max().unwrap()
 }
 
+fn pathfinder3(graph: &HashMap<String, Vec<(String, u32, u32)>>) -> Vec<(u64, u32)> {
+    let mut queue = Vec::new();
+    let mut res = vec![];
+    let start = "AA".to_owned();
+    let ids: HashMap<String, u8> = graph
+        .keys()
+        .enumerate()
+        .map(|(k, v)| (v.to_owned(), k as u8))
+        .collect();
+    queue.push((26, 0, start, 0u64));
+
+    while let Some((time, pressure, current, path)) = queue.pop() {
+        for (next, distance, rate) in &graph[&current] {
+            if !(path & (1 << ids[next]) == 0) || *distance as isize > time as isize - 1 {
+                continue;
+            }
+
+            queue.push((
+                time - distance - 1,
+                pressure + rate * (time - distance - 1),
+                next.clone(),
+                path | (1 << ids[next]),
+            ))
+        }
+        if pressure > 0 {
+            res.push((path, pressure));
+        }
+    }
+    res
+}
+
 fn pathfinder2(graph: &HashMap<String, Vec<(String, u32, u32)>>) -> u32 {
     let mut queue = Vec::new();
     let mut res = vec![];
     let start = "AA".to_owned();
-    queue.push((26, 0, vec![&start], true));
+    let ids: HashMap<String, u8> = graph
+        .keys()
+        .enumerate()
+        .map(|(k, v)| (v.to_owned(), k as u8))
+        .collect();
+    let graph2: Vec<&Vec<(String, u32, u32)>> = graph.values().collect();
+    queue.push((26, 26, 0, 0u64, &start, &start, true));
 
-    while let Some((time, pressure, path, elephants_round)) = queue.pop() {
-        let current = path.last().unwrap();
+    while let Some((
+        time_me,
+        time_elephant,
+        pressure,
+        path,
+        current_me,
+        current_elephant,
+        elephants_round,
+    )) = queue.pop()
+    {
+        let current = if elephants_round {
+            current_elephant
+        } else {
+            current_me
+        };
 
-        for (next, distance, rate) in &graph[*current] {
-            if path.contains(&next) || *distance as isize > time as isize - 1 {
+        let time = if elephants_round {
+            time_elephant
+        } else {
+            time_me
+        };
+
+        for (next, distance, rate) in &graph[current] {
+            if !(path & (1 << ids[next]) == 0) || *distance as isize > time as isize - 2 {
                 continue;
             }
-
-            let mut p = path.clone();
-            let next_time = if !elephants_round {
-                time - distance - 1
+            // println!("{path:b}");
+            if elephants_round {
+                queue.push((
+                    time_me,
+                    time - distance - 1,
+                    pressure + rate * (time - distance - 1),
+                    path | (1 << ids[next]),
+                    current_me,
+                    next,
+                    false,
+                ));
             } else {
-                time
-            };
-            p.push(&next);
-            queue.push((next_time, pressure + rate * time, p, !elephants_round))
+                queue.push((
+                    time - distance - 1,
+                    time_elephant,
+                    pressure + rate * (time - distance - 1),
+                    path | (1 << ids[next]),
+                    next,
+                    current_elephant,
+                    true,
+                ));
+            }
         }
 
         res.push(pressure);

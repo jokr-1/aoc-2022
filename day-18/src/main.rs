@@ -1,28 +1,19 @@
-use std::{collections::HashSet, ops::Add, str::FromStr};
-
-struct Position {
-    x: i8,
-    y: i8,
-    z: i8,
-}
-
-impl Add for Position {
-    type Output = Self;
-
-    fn add(self, other: Self) -> Self {
-        Self {
-            x: self.x + other.x,
-            y: self.y + other.y,
-            z: self.z + other.z,
-        }
-    }
-}
+use std::collections::HashSet;
 
 fn main() {
     let input = include_str!("../input.txt");
     println!("Part 1: {:?}", part_one(input));
     println!("Part 2: {:?}", part_two(input));
 }
+
+const DIRS: [(i8, i8, i8); 6] = [
+    (-1, 0, 0),
+    (1, 0, 0),
+    (0, 1, 0),
+    (0, -1, 0),
+    (0, 0, 1),
+    (0, 0, -1),
+];
 
 fn part_one(input: &str) -> usize {
     let droplets: HashSet<(i8, i8, i8)> = input
@@ -36,42 +27,22 @@ fn part_one(input: &str) -> usize {
             )
         })
         .collect();
-    let mut surface = 0;
-    for (x, y, z) in &droplets {
-        if !droplets.contains(&(x + 1, *y, *z)) {
-            surface += 1;
-        }
 
-        if !droplets.contains(&(x - 1, *y, *z)) {
-            surface += 1;
-        }
-
-        if !droplets.contains(&(*x, y + 1, *z)) {
-            surface += 1;
-        }
-
-        if !droplets.contains(&(*x, y - 1, *z)) {
-            surface += 1;
-        }
-
-        if !droplets.contains(&(*x, *y, z + 1)) {
-            surface += 1;
-        }
-
-        if !droplets.contains(&(*x, *y, z - 1)) {
-            surface += 1;
-        }
-    }
-
-    surface
+    droplets
+        .iter()
+        .flat_map(|(x, y, z)| {
+            DIRS.iter()
+                .map(move |(dx, dy, dz)| (x + dx, y + dy, z + dz))
+        })
+        .filter(|pos| !droplets.contains(pos))
+        .count()
 }
-
-type Grid = Vec<Vec<Vec<bool>>>;
 
 fn part_two(input: &str) -> i32 {
     const SIZE: usize = 40;
-    let mut grid: Grid = vec![vec![vec![false; SIZE]; SIZE]; SIZE];
-    let mut visited: Grid = vec![vec![vec![false; SIZE]; SIZE]; SIZE];
+
+    let mut grid = vec![vec![vec![false; SIZE]; SIZE]; SIZE];
+    let mut visited = grid.clone();
 
     input.lines().for_each(|l| {
         let mut iter = l.split(',').map(|v| v.parse::<usize>().unwrap());
@@ -96,12 +67,13 @@ fn part_two(input: &str) -> i32 {
             surface += 1;
         } else {
             visited[x][y][z] = true;
-            queue.push((x + 1, y, z));
-            queue.push(((x as isize - 1) as usize, y, z));
-            queue.push((x, y + 1, z));
-            queue.push((x, (y as isize - 1) as usize, z));
-            queue.push((x, y, z + 1));
-            queue.push((x, y, (z as isize - 1) as usize));
+            for (dx, dy, dz) in DIRS {
+                queue.push((
+                    (x as i8 + dx) as usize,
+                    (y as i8 + dy) as usize,
+                    (z as i8 + dz) as usize,
+                ));
+            }
         }
     }
 
