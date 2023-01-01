@@ -38,6 +38,11 @@ fn resolve(monkeys: &HashMap<String, Job>, root: &String) -> isize {
 fn main() {
     let input = include_str!("../input.txt");
 
+    println!("Part 1: {:?}", part_one(input));
+    println!("Part 2: {:?}", part_two(input));
+}
+
+fn part_one(input: &str) -> isize {
     let monkeys: HashMap<String, Job> = input
         .lines()
         .map(|l| {
@@ -45,15 +50,55 @@ fn main() {
             (name.to_owned(), job.parse().unwrap())
         })
         .collect();
-
-    println!("Part 1: {:?}", resolve(&monkeys, &"root".to_owned()));
-    println!("Part 2: {:?}", part_two(input));
+    resolve(&monkeys, &"root".to_owned())
 }
 
-fn part_one(input: &str) -> i32 {
-    0
+fn resolve2(monkeys: &HashMap<String, Job>, root: &String, humn: isize) -> isize {
+    match &monkeys[root] {
+        Job::Number(_) if root == &"humn".to_string() => humn,
+        Job::Number(x) => *x,
+        Job::Add(a, b) => resolve2(monkeys, &a, humn) + resolve2(monkeys, &b, humn),
+        Job::Subtract(a, b) => resolve2(monkeys, &a, humn) - resolve2(monkeys, &b, humn),
+        Job::Multiply(a, b) => resolve2(monkeys, &a, humn) * resolve2(monkeys, &b, humn),
+        Job::Divide(a, b) => resolve2(monkeys, &a, humn) / resolve2(monkeys, &b, humn),
+    }
 }
 
-fn part_two(input: &str) -> i32 {
+fn part_two(input: &str) -> isize {
+    let mut monkeys: HashMap<String, Job> = input
+        .lines()
+        .map(|l| {
+            let (name, job) = l.split_once(": ").unwrap();
+            (name.to_owned(), job.parse().unwrap())
+        })
+        .collect();
+
+    let (a, b) = match &monkeys[&"root".to_owned()] {
+        Job::Add(a, b) => (a, b),
+        Job::Subtract(a, b) => (a, b),
+        Job::Multiply(a, b) => (a, b),
+        Job::Divide(a, b) => (a, b),
+        _ => todo!(),
+    };
+
+    let mut i = 1;
+    let mut last_diff = 0;
+    let mut j = 0;
+    loop {
+        let diff = resolve2(&monkeys, a, i as isize) - resolve2(&monkeys, b, i as isize);
+        let x = last_diff - diff;
+        last_diff = diff;
+
+        if j > 1 && x != 0 {
+            i += diff / x;
+        } else {
+            i += 1;
+        }
+
+        j += 1;
+        if diff == 0 {
+            return i;
+        }
+    }
     0
 }
