@@ -1,4 +1,13 @@
-use std::{collections::HashMap, ops::Add, str::FromStr};
+use std::{collections::HashMap, str::FromStr};
+
+const HUMN_KEY: &str = "humn";
+const ROOT_KEY: &str = "root";
+
+fn main() {
+    let input = include_str!("../input.txt");
+    println!("Part 1: {:?}", part_one(input));
+    println!("Part 2: {:?}", part_two(input));
+}
 
 #[derive(Debug)]
 enum Job {
@@ -35,13 +44,6 @@ fn resolve(monkeys: &HashMap<String, Job>, root: &String) -> isize {
     }
 }
 
-fn main() {
-    let input = include_str!("../input.txt");
-
-    println!("Part 1: {:?}", part_one(input));
-    println!("Part 2: {:?}", part_two(input));
-}
-
 fn part_one(input: &str) -> isize {
     let monkeys: HashMap<String, Job> = input
         .lines()
@@ -55,7 +57,7 @@ fn part_one(input: &str) -> isize {
 
 fn resolve2(monkeys: &HashMap<String, Job>, root: &String, humn: isize) -> isize {
     match &monkeys[root] {
-        Job::Number(_) if root == &"humn".to_string() => humn,
+        Job::Number(_) if *root == HUMN_KEY.to_string() => humn,
         Job::Number(x) => *x,
         Job::Add(a, b) => resolve2(monkeys, &a, humn) + resolve2(monkeys, &b, humn),
         Job::Subtract(a, b) => resolve2(monkeys, &a, humn) - resolve2(monkeys, &b, humn),
@@ -65,7 +67,9 @@ fn resolve2(monkeys: &HashMap<String, Job>, root: &String, humn: isize) -> isize
 }
 
 fn part_two(input: &str) -> isize {
-    let mut monkeys: HashMap<String, Job> = input
+    let root = &ROOT_KEY.to_owned();
+
+    let monkeys: HashMap<String, Job> = input
         .lines()
         .map(|l| {
             let (name, job) = l.split_once(": ").unwrap();
@@ -73,32 +77,35 @@ fn part_two(input: &str) -> isize {
         })
         .collect();
 
-    let (a, b) = match &monkeys[&"root".to_owned()] {
+    // unpack left and right value
+    let (a, b) = match &monkeys[root] {
         Job::Add(a, b) => (a, b),
         Job::Subtract(a, b) => (a, b),
         Job::Multiply(a, b) => (a, b),
         Job::Divide(a, b) => (a, b),
-        _ => todo!(),
+        _ => panic!("Root should be a operation"),
     };
 
-    let mut i = 1;
-    let mut last_diff = 0;
-    let mut j = 0;
+    // newton
+    let fn_delta = |i| resolve2(&monkeys, a, i as isize) - resolve2(&monkeys, b, i as isize);
+
+    let mut number = 1;
+    let mut last_number = 0;
+    let mut delta_last = fn_delta(last_number);
+
     loop {
-        let diff = resolve2(&monkeys, a, i as isize) - resolve2(&monkeys, b, i as isize);
-        let x = last_diff - diff;
-        last_diff = diff;
+        let delta = fn_delta(number);
 
-        if j > 1 && x != 0 {
-            i += diff / x;
-        } else {
-            i += 1;
+        if delta == 0 {
+            return number;
         }
 
-        j += 1;
-        if diff == 0 {
-            return i;
-        }
+        // gradient
+        let m = (delta - delta_last) / (last_number - number);
+        let step = delta / m;
+
+        delta_last = delta;
+        last_number = number;
+        number += step;
     }
-    0
 }
